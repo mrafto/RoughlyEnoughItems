@@ -339,6 +339,14 @@ public class RoughlyEnoughItemsCoreClient {
         return true;
     }
     
+    private static void removeRecipeBookButtons(Screen screen, Identifier recipeButtonTex) {
+        for (GuiEventListener widget : List.copyOf(screen.children())) {
+            if (widget instanceof ImageButton button && button.sprites.enabled().equals(recipeButtonTex)) {
+                screen.removeWidget(widget);
+            }
+        }
+    }
+    
     private void registerEvents() {
         Minecraft client = Minecraft.getInstance();
         final Identifier recipeButtonTex = Identifier.withDefaultNamespace("textures/gui/recipe_button.png");
@@ -415,9 +423,7 @@ public class RoughlyEnoughItemsCoreClient {
                 ((ScreenRegistryImpl) ScreenRegistry.getInstance()).getLastRendererProvider(screen);
             }
             if (ConfigObject.getInstance().doesDisableRecipeBook() && screen instanceof AbstractContainerScreen) {
-                access.getRenderables().removeIf(widget -> widget instanceof ImageButton button && button.sprites.enabled().equals(recipeButtonTex));
-                access.getNarratables().removeIf(widget -> widget instanceof ImageButton button && button.sprites.enabled().equals(recipeButtonTex));
-                screen.children().removeIf(widget -> widget instanceof ImageButton button && button.sprites.enabled().equals(recipeButtonTex));
+                removeRecipeBookButtons(screen, recipeButtonTex);
             }
         });
         ClientScreenInputEvent.MOUSE_CLICKED_PRE.register((minecraftClient, screen, event, doubleClick) -> {

@@ -58,7 +58,7 @@ public class DefaultShapelessDisplay extends DefaultCraftingDisplay {
     public DefaultShapelessDisplay(RecipeHolder<ShapelessRecipe> recipe) {
         super(
                 CollectionUtils.map(recipe.value().placementInfo().ingredients(), EntryIngredients::ofIngredient),
-                List.of(EntryIngredients.ofSlotDisplay(recipe.value().display().getFirst().result())),
+                List.of(EntryIngredients.recipeOutput(recipe.value())),
                 Optional.of(recipe.id().identifier())
         );
     }

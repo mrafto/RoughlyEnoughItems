@@ -26,7 +26,7 @@ package me.shedaniel.rei.api.common.registry.display;
 import me.shedaniel.rei.api.common.plugins.PluginManager;
 import me.shedaniel.rei.api.common.plugins.REICommonPlugin;
 
-public interface ServerDisplayRegistry extends DisplayRegistryCommon<REICommonPlugin>, DisplayConsumer.RecipeManagerConsumer {
+public interface ServerDisplayRegistry extends DisplayRegistryCommon<REICommonPlugin>, DisplayConsumer.RecipeManagerConsumer, DisplayConsumer.RecipeDisplayConsumer {
     /**
      * @return the instance of {@link ServerDisplayRegistry}
      */

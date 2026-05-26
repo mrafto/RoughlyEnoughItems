@@ -223,7 +223,7 @@ public interface DisplayConsumer {
     }
     
     interface RecipeDisplayConsumer extends DisplayConsumer {
-        default <T extends RecipeDisplay, D extends Display> RecipeFillerBuilder<T, D> beginRecipeFiller(Class<T> typeClass) {
+        default <T extends RecipeDisplay, D extends Display> RecipeFillerBuilder<T, D> beginRecipeDisplayFiller(Class<T> typeClass) {
             return new RecipeFillerBuilder<RecipeDisplay, D>(this, null, null)
                     .filterClass(typeClass);
         }

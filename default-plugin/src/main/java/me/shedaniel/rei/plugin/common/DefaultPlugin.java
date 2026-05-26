@@ -45,7 +45,13 @@ import me.shedaniel.rei.plugin.common.displays.brewing.DefaultBrewingDisplay;
 import me.shedaniel.rei.plugin.common.displays.cooking.DefaultBlastingDisplay;
 import me.shedaniel.rei.plugin.common.displays.cooking.DefaultSmeltingDisplay;
 import me.shedaniel.rei.plugin.common.displays.cooking.DefaultSmokingDisplay;
-import me.shedaniel.rei.plugin.common.displays.crafting.*;
+import me.shedaniel.rei.plugin.common.displays.crafting.DefaultCraftingDisplay;
+import me.shedaniel.rei.plugin.common.displays.crafting.DefaultCustomDisplay;
+import me.shedaniel.rei.plugin.common.displays.crafting.DefaultCustomShapedDisplay;
+import me.shedaniel.rei.plugin.common.displays.crafting.DefaultCustomShapelessDisplay;
+import me.shedaniel.rei.plugin.common.displays.crafting.DefaultShapedDisplay;
+import me.shedaniel.rei.plugin.common.displays.crafting.DefaultShapelessDisplay;
+import me.shedaniel.rei.plugin.common.displays.crafting.MapExtendingCraftingDisplay;
 import me.shedaniel.rei.plugin.common.displays.tag.TagNodes;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
@@ -109,6 +115,7 @@ public class DefaultPlugin implements BuiltinPlugin, REICommonPlugin {
     
     @Override
     public void registerDisplays(ServerDisplayRegistry registry) {
+        RecipeDisplayFillerSupport.registerVanillaRecipeDisplays(registry, true);
         registry.beginRecipeFiller(CraftingRecipe.class)
                 .filterType(RecipeType.CRAFTING)
                 .fill(DefaultCraftingDisplay::of);

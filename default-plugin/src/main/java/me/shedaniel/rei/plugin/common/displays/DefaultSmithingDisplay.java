@@ -91,7 +91,7 @@ public class DefaultSmithingDisplay extends BasicDisplay implements SmithingDisp
                         EntryIngredients.ofIngredient(recipe.value().baseIngredient()),
                         recipe.value().additionIngredient().map(EntryIngredients::ofIngredient).orElse(EntryIngredient.empty())
                 ),
-                List.of(EntryIngredients.ofSlotDisplay(recipe.value().display().getFirst().result())),
+                List.of(EntryIngredients.recipeOutput(recipe.value())),
                 Optional.of(SmithingRecipeType.TRANSFORM),
                 Optional.of(recipe.id().identifier())
         );

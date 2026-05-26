@@ -28,6 +28,7 @@ import me.shedaniel.rei.api.client.entry.renderer.EntryRenderer;
 import me.shedaniel.rei.api.client.gui.widgets.Tooltip;
 import me.shedaniel.rei.api.client.gui.widgets.TooltipContext;
 import me.shedaniel.rei.api.common.entry.EntryStack;
+import me.shedaniel.rei.impl.client.gui.fabric.REIGuiGraphicsCompat;
 import me.shedaniel.rei.impl.client.gui.widget.CachedEntryListRender;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -42,7 +43,7 @@ public class CachingEntryRenderer implements EntryRenderer<Object> {
     
     @Override
     public void render(EntryStack<Object> entry, GuiGraphics graphics, Rectangle bounds, int mouseX, int mouseY, float delta) {
-        graphics.innerBlit(RenderPipelines.GUI_TEXTURED, CachedEntryListRender.cachedTextureLocation, bounds.x, bounds.getMaxX(), bounds.y, bounds.getMaxY(), sprite.u0, sprite.u1, sprite.v0, sprite.v1, -1);
+        REIGuiGraphicsCompat.innerBlit(graphics, RenderPipelines.GUI_TEXTURED, CachedEntryListRender.cachedTextureLocation, bounds.x, bounds.getMaxX(), bounds.y, bounds.getMaxY(), sprite.u0, sprite.u1, sprite.v0, sprite.v1, -1);
     }
     
     @Override

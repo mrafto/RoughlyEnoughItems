@@ -119,7 +119,7 @@ public class DefaultClientRuntimePlugin implements REIClientPlugin {
                 
                 @Override
                 public void render(GuiGraphics graphics, Rectangle bounds, int mouseX, int mouseY, float delta) {
-                    graphics.innerBlit(RenderPipelines.GUI_TEXTURED, id, bounds.x, bounds.getMaxX(), bounds.y, bounds.getMaxY(), 0, 0, 1, 0, 1);
+                    me.shedaniel.rei.impl.client.gui.fabric.REIGuiGraphicsCompat.innerBlit(graphics, RenderPipelines.GUI_TEXTURED, id, bounds.x, bounds.getMaxX(), bounds.y, bounds.getMaxY(), 0, 0, 1, 0, 1);
                 }
                 
                 @Override

@@ -31,10 +31,11 @@ import me.shedaniel.rei.api.common.entry.EntryStack;
 import me.shedaniel.rei.api.common.entry.type.EntryDefinition;
 import me.shedaniel.rei.api.common.entry.type.EntryType;
 import me.shedaniel.rei.api.common.entry.type.VanillaEntryTypes;
+import dev.architectury.platform.Platform;
+import dev.architectury.utils.Env;
+import dev.architectury.utils.GameInstance;
 import me.shedaniel.rei.impl.Internals;
 import me.shedaniel.rei.impl.common.InternalLogger;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderSet;
@@ -46,6 +47,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.display.SlotDisplay;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.display.RecipeDisplay;
 import net.minecraft.world.item.crafting.display.SlotDisplayContext;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
@@ -55,6 +60,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.lang.reflect.Method;
 
 public final class EntryIngredients {
     private EntryIngredients() {
@@ -241,19 +247,59 @@ public final class EntryIngredients {
         };
     }
 
+    public static EntryIngredient recipeOutput(Recipe<?> recipe) {
+        for (RecipeDisplay display : recipe.display()) {
+            return ofSlotDisplay(display.result());
+        }
+        try {
+            return of((ItemStack) recipe.getClass().getMethod("result").invoke(recipe));
+        } catch (Throwable ignored) {
+            return EntryIngredient.empty();
+        }
+    }
+    
     public static ContextMap slotDisplayContext() {
-        Minecraft client = Minecraft.getInstance();
-        if (client.level != null) {
-            return SlotDisplayContext.fromLevel(client.level);
+        if (Platform.getEnvironment() == Env.SERVER) {
+            return serverSlotDisplayContext();
         }
+        return clientSlotDisplayContext();
+    }
+    
+    private static ContextMap serverSlotDisplayContext() {
+        MinecraftServer server = GameInstance.getServer();
+        if (server != null) {
+            ServerLevel level = server.overworld();
+            if (level != null) {
+                return SlotDisplayContext.fromLevel(level);
+            }
+            return new ContextMap.Builder()
+                    .withParameter(SlotDisplayContext.REGISTRIES, server.registryAccess())
+                    .create(SlotDisplayContext.CONTEXT);
+        }
+        return new ContextMap.Builder()
+                .withParameter(SlotDisplayContext.REGISTRIES, Internals.getRegistryAccess())
+                .create(SlotDisplayContext.CONTEXT);
+    }
+    
+    private static ContextMap clientSlotDisplayContext() {
+        try {
+            Class<?> minecraftClass = Class.forName("net.minecraft.client.Minecraft");
+            Object client = minecraftClass.getMethod("getInstance").invoke(null);
+            Object level = minecraftClass.getField("level").get(client);
+            if (level != null) {
+                return SlotDisplayContext.fromLevel((net.minecraft.world.level.Level) level);
+            }
 
-        ContextMap.Builder builder = new ContextMap.Builder()
-                .withParameter(SlotDisplayContext.REGISTRIES, Internals.getRegistryAccess());
-        ClientPacketListener connection = client.getConnection();
-        if (connection != null) {
-            builder.withParameter(SlotDisplayContext.FUEL_VALUES, connection.fuelValues());
+            ContextMap.Builder builder = new ContextMap.Builder()
+                    .withParameter(SlotDisplayContext.REGISTRIES, Internals.getRegistryAccess());
+            Method getConnection = minecraftClass.getMethod("getConnection");
+            Object connection = getConnection.invoke(client);
+            return builder.create(SlotDisplayContext.CONTEXT);
+        } catch (Throwable ignored) {
+            return new ContextMap.Builder()
+                    .withParameter(SlotDisplayContext.REGISTRIES, Internals.getRegistryAccess())
+                    .create(SlotDisplayContext.CONTEXT);
         }
-        return builder.create(SlotDisplayContext.CONTEXT);
     }
 
     private static EntryIngredient resolveSlotDisplay(SlotDisplay slot) {

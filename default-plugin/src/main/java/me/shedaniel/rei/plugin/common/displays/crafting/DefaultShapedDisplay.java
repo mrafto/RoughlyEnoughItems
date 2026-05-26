@@ -68,7 +68,7 @@ public class DefaultShapedDisplay extends DefaultCraftingDisplay {
     public DefaultShapedDisplay(RecipeHolder<ShapedRecipe> recipe) {
         super(
                 CollectionUtils.map(recipe.value().getIngredients(), opt -> opt.map(EntryIngredients::ofIngredient).orElse(EntryIngredient.empty())),
-                List.of(EntryIngredients.ofSlotDisplay(recipe.value().display().getFirst().result())),
+                List.of(EntryIngredients.recipeOutput(recipe.value())),
                 Optional.of(recipe.id().identifier())
         );
         this.width = recipe.value().getWidth();

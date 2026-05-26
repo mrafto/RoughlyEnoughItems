@@ -1,19 +1,13 @@
 package net.minecraft.client.gui;
 
+import me.shedaniel.rei.impl.client.gui.fabric.REIGuiGraphicsCompat;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 /**
  * Compatibility shim for code that still targets the pre-26.1 GuiGraphics type.
@@ -23,12 +17,6 @@ public class GuiGraphics extends GuiGraphicsExtractor {
     private static final Field GUI_RENDER_STATE_FIELD = findField("guiRenderState");
     private static final Field MOUSE_X_FIELD = findField("mouseX");
     private static final Field MOUSE_Y_FIELD = findField("mouseY");
-    private static final Field SCISSOR_STACK_FIELD = findField("scissorStack");
-    private static final Method INNER_TEXTURED_BLIT_METHOD = findMethod("innerBlit",
-            RenderPipeline.class, GpuTextureView.class, GpuSampler.class,
-            int.class, int.class, int.class, int.class,
-            float.class, float.class, float.class, float.class, int.class);
-
     public GuiGraphics(Minecraft minecraft, GuiRenderState renderState, int guiWidth, int guiHeight) {
         super(minecraft, renderState, guiWidth, guiHeight);
     }
@@ -106,29 +94,8 @@ public class GuiGraphics extends GuiGraphicsExtractor {
         itemDecorations(font, stack, x, y, text);
     }
 
-    public void innerBlit(RenderPipeline pipeline, Identifier location, int xStart, int xEnd, int yStart, int yEnd, float u0, float u1, float v0, float v1, int color) {
-        Minecraft minecraft = readField(MINECRAFT_FIELD, this);
-        AbstractTexture texture = minecraft.getTextureManager().getTexture(location);
-        invoke(INNER_TEXTURED_BLIT_METHOD, this, pipeline, texture.getTextureView(), texture.getSampler(),
-                xStart, yStart, xEnd, yEnd, u0, u1, v0, v1, color);
-    }
-
     public void withFreshScissorStack(Runnable runnable) {
-        Object previous = readField(SCISSOR_STACK_FIELD, this);
-        try {
-            Constructor<?> constructor = SCISSOR_STACK_FIELD.getType().getDeclaredConstructor();
-            constructor.setAccessible(true);
-            SCISSOR_STACK_FIELD.set(this, constructor.newInstance());
-            runnable.run();
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to swap GuiGraphicsExtractor scissor stack", e);
-        } finally {
-            try {
-                SCISSOR_STACK_FIELD.set(this, previous);
-            } catch (ReflectiveOperationException e) {
-                throw new IllegalStateException("Failed to restore GuiGraphicsExtractor scissor stack", e);
-            }
-        }
+        REIGuiGraphicsCompat.withFreshScissorStack(this, runnable);
     }
 
     private static Field findField(String name) {
@@ -138,16 +105,6 @@ public class GuiGraphics extends GuiGraphicsExtractor {
             return field;
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Failed to resolve GuiGraphicsExtractor field: " + name, e);
-        }
-    }
-
-    private static Method findMethod(String name, Class<?>... parameterTypes) {
-        try {
-            Method method = GuiGraphicsExtractor.class.getDeclaredMethod(name, parameterTypes);
-            method.setAccessible(true);
-            return method;
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to resolve GuiGraphicsExtractor method: " + name, e);
         }
     }
 
@@ -165,14 +122,6 @@ public class GuiGraphics extends GuiGraphicsExtractor {
             return field.getInt(instance);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Failed to read GuiGraphicsExtractor field: " + field.getName(), e);
-        }
-    }
-
-    private static void invoke(Method method, Object instance, Object... args) {
-        try {
-            method.invoke(instance, args);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to invoke GuiGraphicsExtractor method: " + method.getName(), e);
         }
     }
 }

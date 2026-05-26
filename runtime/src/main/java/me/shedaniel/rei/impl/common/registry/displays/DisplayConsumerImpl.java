@@ -81,7 +81,7 @@ public interface DisplayConsumerImpl extends DisplayConsumer {
                 return (Collection<D>) filler.mappingFunction().apply(value, reasons);
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Failed to fill displays!", e);
+            throw new RuntimeException("Failed to fill displays for " + value.getClass().getName() + ": " + e, e);
         }
         
         return null;
@@ -93,11 +93,16 @@ public interface DisplayConsumerImpl extends DisplayConsumer {
             BiFunction<Object, DisplayAdditionReasons, Collection<? extends D>> mappingFunction
     ) {
         public static <D extends Display> DisplayFiller<D> of(BiPredicate<Object, DisplayAdditionReasons> predicate, Function<Object, D> mappingFunction) {
-            return new DisplayFiller<>(predicate, (o, r) -> Collections.singleton(mappingFunction.apply(o)));
+            return new DisplayFiller<>(predicate, (o, r) -> singletonOrEmpty(mappingFunction.apply(o)));
         }
         
         public static <D extends Display> DisplayFiller<D> of(BiPredicate<Object, DisplayAdditionReasons> predicate, BiFunction<Object, DisplayAdditionReasons, D> mappingFunction) {
-            return new DisplayFiller<>(predicate, (o, r) -> Collections.singleton(mappingFunction.apply(o, r)));
+            return new DisplayFiller<>(predicate, (o, r) -> singletonOrEmpty(mappingFunction.apply(o, r)));
+        }
+        
+        @Nullable
+        private static <D extends Display> Collection<D> singletonOrEmpty(@Nullable D display) {
+            return display == null ? null : Collections.singleton(display);
         }
         
         public static <D extends Display> DisplayFiller<D> ofMultiple(BiPredicate<Object, DisplayAdditionReasons> predicate, Function<Object, Collection<? extends D>> mappingFunction) {

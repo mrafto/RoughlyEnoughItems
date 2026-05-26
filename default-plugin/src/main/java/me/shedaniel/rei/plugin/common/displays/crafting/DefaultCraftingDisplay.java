@@ -26,8 +26,8 @@ package me.shedaniel.rei.plugin.common.displays.crafting;
 import me.shedaniel.rei.api.common.category.CategoryIdentifier;
 import me.shedaniel.rei.api.common.display.basic.BasicDisplay;
 import me.shedaniel.rei.api.common.entry.EntryIngredient;
-import me.shedaniel.rei.plugin.client.displays.ClientsidedCraftingDisplay;
 import me.shedaniel.rei.plugin.common.BuiltinPlugin;
+import me.shedaniel.rei.plugin.common.RecipeDisplayFillerSupport;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -56,9 +56,9 @@ public abstract class DefaultCraftingDisplay extends BasicDisplay implements Cra
         } else if (!recipe.isSpecial()) {
             for (RecipeDisplay d : recipe.display()) {
                 if (d instanceof ShapedCraftingRecipeDisplay display) {
-                    return new ClientsidedCraftingDisplay.Shaped(display, Optional.empty());
+                    return (CraftingDisplay) RecipeDisplayFillerSupport.shapedCrafting(display, Optional.empty(), true);
                 } else if (d instanceof ShapelessCraftingRecipeDisplay display) {
-                    return new ClientsidedCraftingDisplay.Shapeless(display, Optional.empty());
+                    return (CraftingDisplay) RecipeDisplayFillerSupport.shapelessCrafting(display, Optional.empty(), true);
                 }
             }
         }

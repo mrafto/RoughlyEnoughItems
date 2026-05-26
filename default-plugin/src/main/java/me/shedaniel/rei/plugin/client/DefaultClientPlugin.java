@@ -68,6 +68,7 @@ import me.shedaniel.rei.plugin.client.favorites.GameModeFavoriteEntry;
 import me.shedaniel.rei.plugin.client.favorites.TimeFavoriteEntry;
 import me.shedaniel.rei.plugin.client.favorites.WeatherFavoriteEntry;
 import me.shedaniel.rei.plugin.common.BuiltinPlugin;
+import me.shedaniel.rei.plugin.common.RecipeDisplayFillerSupport;
 import me.shedaniel.rei.plugin.common.displays.*;
 import me.shedaniel.rei.plugin.common.displays.anvil.AnvilRecipe;
 import me.shedaniel.rei.plugin.common.displays.anvil.DefaultAnvilDisplay;
@@ -299,22 +300,6 @@ public class DefaultClientPlugin implements REIClientPlugin, BuiltinClientPlugin
         return EntryIngredients.ofItemTag(TagKey.create(Registries.ITEM, tagId));
     }
 
-    private static boolean hasCraftingStation(FurnaceRecipeDisplay display, Item station) {
-        return EntryIngredients.testFuzzy(EntryIngredients.ofSlotDisplay(display.craftingStation()), EntryStacks.of(station));
-    }
-
-    private static ClientsidedCookingDisplay createCookingFallbackDisplay(FurnaceRecipeDisplay display, Optional<RecipeDisplayId> id) {
-        if (hasCraftingStation(display, Items.SMOKER)) {
-            return new ClientsidedCookingDisplay.Smoking(display, id);
-        }
-        if (hasCraftingStation(display, Items.BLAST_FURNACE)) {
-            return new ClientsidedCookingDisplay.Blasting(display, id);
-        }
-        // Mojang can omit or flatten the workstation slot in recipe-book fallback displays on multiplayer.
-        // When that happens, keep the recipe visible by treating it as a normal furnace recipe.
-        return new ClientsidedCookingDisplay.Smelting(display, id);
-    }
-
     private static boolean canUseFluidEntries() {
         if (fluidEntriesAvailable != null) {
             return fluidEntriesAvailable;
@@ -335,19 +320,7 @@ public class DefaultClientPlugin implements REIClientPlugin, BuiltinClientPlugin
     public void registerDisplays(DisplayRegistry registry) {
         CategoryRegistry.getInstance().add(new DefaultInformationCategory(), new DefaultTagCategory());
         
-        registry.beginRecipeFiller(ShapedCraftingRecipeDisplay.class)
-                .fill(ClientsidedCraftingDisplay.Shaped::new);
-        registry.beginRecipeFiller(ShapelessCraftingRecipeDisplay.class)
-                .fill(ClientsidedCraftingDisplay.Shapeless::new);
-        registry.beginRecipeFiller(FurnaceRecipeDisplay.class)
-                .filterType(FurnaceRecipeDisplay.TYPE)
-                .fill(DefaultClientPlugin::createCookingFallbackDisplay);
-        registry.beginRecipeFiller(StonecutterRecipeDisplay.class)
-                .filterType(StonecutterRecipeDisplay.TYPE)
-                .fill(ClientsidedStoneCuttingDisplay::new);
-        registry.beginRecipeFiller(SmithingRecipeDisplay.class)
-                .filterType(SmithingRecipeDisplay.TYPE)
-                .fill(ClientsidedSmithingDisplay::new);
+        RecipeDisplayFillerSupport.registerVanillaRecipeDisplays(registry);
         registry.beginFiller(AnvilRecipe.class)
                 .fill(DefaultAnvilDisplay::new);
         registry.beginFiller(BrewingRecipe.class)

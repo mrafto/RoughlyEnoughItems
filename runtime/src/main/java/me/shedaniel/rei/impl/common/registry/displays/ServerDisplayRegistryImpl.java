@@ -48,6 +48,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.display.RecipeDisplay;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -221,10 +222,24 @@ public class ServerDisplayRegistryImpl extends AbstractDisplayRegistry<REICommon
             List<RecipeHolder<?>> allSortedRecipes = getAllSortedRecipes();
             for (int i = allSortedRecipes.size() - 1; i >= 0; i--) {
                 RecipeHolder<?> recipe = allSortedRecipes.get(i);
-                try {
-                    addWithReason(recipe, DisplayAdditionReason.RECIPE_MANAGER);
-                } catch (Throwable e) {
-                    InternalLogger.getInstance().error("Failed to fill display for recipe: %s [%s]", recipe.value(), recipe.id(), e);
+                boolean filled = false;
+                for (RecipeDisplay display : recipe.value().display()) {
+                    int before = size();
+                    try {
+                        addWithReason(display, DisplayAdditionReason.RECIPE_MANAGER);
+                        if (size() > before) {
+                            filled = true;
+                        }
+                    } catch (Throwable e) {
+                        logRecipeFillFailure(recipe, e);
+                    }
+                }
+                if (!filled) {
+                    try {
+                        addWithReason(recipe, DisplayAdditionReason.RECIPE_MANAGER);
+                    } catch (Throwable e) {
+                        logRecipeFillFailure(recipe, e);
+                    }
                 }
             }
         }
@@ -232,7 +247,20 @@ public class ServerDisplayRegistryImpl extends AbstractDisplayRegistry<REICommon
     }
     
     private List<RecipeHolder<?>> getAllSortedRecipes() {
-        return GameInstance.getServer().getRecipeManager().getRecipes().parallelStream().sorted(RECIPE_COMPARATOR).toList();
+        return GameInstance.getServer().getRecipeManager().getRecipes().stream().sorted(RECIPE_COMPARATOR).toList();
+    }
+    
+    private static void logRecipeFillFailure(RecipeHolder<?> recipe, Throwable error) {
+        Throwable cause = error;
+        while (cause.getCause() != null && (cause.getMessage() == null || cause.getMessage().startsWith("Failed to fill displays"))) {
+            cause = cause.getCause();
+        }
+        InternalLogger.getInstance().error(String.format(
+                "Failed to fill display for recipe: %s [%s]: %s",
+                recipe.value(),
+                recipe.id(),
+                cause
+        ), cause);
     }
     
     public static class ServerDisplaysHolder extends DisplaysHolderImpl {

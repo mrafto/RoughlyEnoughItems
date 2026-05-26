@@ -67,7 +67,7 @@ public class DefaultCampfireDisplay extends BasicDisplay implements CampfireDisp
     
     public DefaultCampfireDisplay(RecipeHolder<CampfireCookingRecipe> recipe) {
         this(List.of(EntryIngredients.ofIngredient(recipe.value().input())),
-                List.of(EntryIngredients.ofSlotDisplay(recipe.value().display().getFirst().result())),
+                List.of(EntryIngredients.recipeOutput(recipe.value())),
                 Optional.of(recipe.id().identifier()), recipe.value().cookingTime());
     }
     

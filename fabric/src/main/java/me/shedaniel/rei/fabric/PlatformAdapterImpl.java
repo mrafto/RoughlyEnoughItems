@@ -23,10 +23,10 @@
 
 package me.shedaniel.rei.fabric;
 
+import dev.architectury.platform.Platform;
+import dev.architectury.utils.Env;
 import me.shedaniel.rei.api.common.entry.EntryIngredient;
-import me.shedaniel.rei.api.common.entry.EntryStack;
 import me.shedaniel.rei.api.common.util.EntryIngredients;
-import me.shedaniel.rei.api.common.util.EntryStacks;
 import me.shedaniel.rei.impl.init.PlatformAdapter;
 import net.minecraft.world.item.crafting.Ingredient;
 
@@ -34,6 +34,14 @@ public class PlatformAdapterImpl implements PlatformAdapter {
     @Override
     public EntryIngredient fromIngredient(Ingredient ingredient) {
         if (ingredient.isEmpty()) return EntryIngredient.empty();
-        return EntryIngredients.ofSlotDisplay(ingredient.display());
+        // SlotDisplay resolution needs a client level; on dedicated server use holder sets directly.
+        if (Platform.getEnvironment() == Env.SERVER) {
+            return EntryIngredients.ofItemsHolderSet(ingredient.values);
+        }
+        try {
+            return EntryIngredients.ofSlotDisplay(ingredient.display());
+        } catch (Throwable ignored) {
+            return EntryIngredients.ofItemsHolderSet(ingredient.values);
+        }
     }
 }
